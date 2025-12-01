@@ -340,31 +340,70 @@ def visualize_csv(file_input_name: str = "output.csv"):
     # compare average runtime from rust to biopython ratio
     categories = ["global, linear", "local, linear", "global, affine", "local, affine"]
     values = [
-        rust_avg_100_global_linear / biopython_avg_100_global_linear,
-        rust_avg_100_local_linear / biopython_avg_100_local_linear,
-        rust_avg_100_global_affine / biopython_avg_100_global_affine,
-        rust_avg_100_local_affine / biopython_avg_100_local_affine,
+        rust_avg_100_global_linear,
+        rust_avg_100_local_linear,
+        rust_avg_100_global_affine,
+        rust_avg_100_local_affine,
     ]
 
+    values = [value / 1000000 for value in values]
+
     plt.bar(categories, values)
-    plt.title("Average Runtime Ratio, Rust to Biopython")
+    plt.title("Average Runtime Ratio, Rust (100-seq)")
     plt.xlabel("Alignment Type")
-    plt.ylabel("Rust to Biopython Runtime Ratio (ns)")
-    plt.savefig("100-sequence-comparison.png")
+    plt.ylabel("Rust Runtime (s)")
+    plt.savefig("rust-100-sequence-comparison-rust.png")
     plt.cla()
 
     categories = ["global, linear", "local, linear", "global, affine", "local, affine"]
     values = [
-        rust_avg_1000_global_linear / biopython_avg_1000_global_linear,
-        rust_avg_1000_local_linear / biopython_avg_1000_local_linear,
-        rust_avg_1000_global_affine / biopython_avg_1000_global_affine,
-        rust_avg_1000_local_affine / biopython_avg_1000_local_affine,
+        rust_avg_1000_global_linear,
+        rust_avg_1000_local_linear,
+        rust_avg_1000_global_affine,
+        rust_avg_1000_local_affine,
     ]
 
+    values = [value / 1000000 for value in values]
+
     plt.bar(categories, values)
-    plt.title("Average Runtime Ratio, Rust to Biopython")
+    plt.title("Average Runtime Ratio, Rust (1000-seq)")
     plt.xlabel("Alignment Type")
-    plt.ylabel("Rust to Biopython Runtime Ratio (ns)")
-    plt.savefig("1000-sequence-comparison.png")
+    plt.ylabel("Rust Runtime (s)")
+    plt.savefig("rust-1000-sequence-comparison.png")
+    plt.cla()
+
+    categories = ["global, linear", "local, linear", "global, affine", "local, affine"]
+    values = [
+        biopython_avg_100_global_linear,
+        biopython_avg_100_local_linear,
+        biopython_avg_100_global_affine,
+        biopython_avg_100_local_affine,
+    ]
+
+    values = [value / 1000000 for value in values]
+
+    plt.bar(categories, values)
+    plt.title("Average Runtime Ratio, Biopython (100-seq)")
+    plt.xlabel("Alignment Type")
+    plt.ylabel("Biopython Runtime (s)")
+    plt.savefig("biopython-100-sequence-comparison.png")
+    plt.cla()
+
+    categories = ["global, linear", "local, linear", "global, affine", "local, affine"]
+    values = [
+        biopython_avg_1000_global_linear,
+        biopython_avg_1000_local_linear,
+        biopython_avg_1000_global_affine,
+        biopython_avg_1000_local_affine,
+    ]
+
+    values = [value / 1000000 for value in values]
+
+    plt.bar(categories, values)
+    plt.title("Average Runtime Ratio, Biopython (1000-seq)")
+    plt.xlabel("Alignment Type")
+    plt.ylabel("Biopython Runtime (s)")
+    plt.savefig("biopython-1000-sequence-comparison.png")
+    plt.cla()
 
 app()
