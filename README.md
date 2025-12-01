@@ -6,7 +6,7 @@ The goal of this project is to achieve runtime comparable to the Biopython Pytho
 
 ## Setup
 
-Please ensure that you have a recent version of Python installed (i.e. Python 3.12.x, Python 3.13.x, Python 3.14.x, etc).
+Please ensure that you have a recent version of Python installed (i.e. Python 3.12.x, Python 3.13.x, Python 3.14.x, etc). Make sure you also have Rust installed.
 
 Create a new virtual environment called ".env" and activate the environment.
 
