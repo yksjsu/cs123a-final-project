@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1>Alignment</h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1>Alignment</h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 800px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#ffffff", "id": 0, "label": "0         ", "physics": false, "shape": "box", "title": "N/A", "value": 0, "x": 0, "y": 0}, {"color": "#ffffff", "id": 1, "label": "-2        ", "physics": false, "shape": "box", "title": "N/A", "value": 1, "x": 100, "y": 0}, {"color": "#ffffff", "id": 2, "label": "-3        ", "physics": false, "shape": "box", "title": "N/A", "value": 2, "x": 200, "y": 0}, {"color": "#ffffff", "id": 3, "label": "-4        ", "physics": false, "shape": "box", "title": "N/A", "value": 3, "x": 300, "y": 0}, {"color": "#ffffff", "id": 4, "label": "-5        ", "physics": false, "shape": "box", "title": "N/A", "value": 4, "x": 400, "y": 0}, {"color": "#ffffff", "id": 5, "label": "-6        ", "physics": false, "shape": "box", "title": "N/A", "value": 5, "x": 500, "y": 0}, {"color": "#ffffff", "id": 6, "label": "-7        ", "physics": false, "shape": "box", "title": "N/A", "value": 6, "x": 600, "y": 0}, {"color": "#ffffff", "id": 7, "label": "-8        ", "physics": false, "shape": "box", "title": "N/A", "value": 7, "x": 700, "y": 0}, {"color": "#ffffff", "id": 8, "label": "-2        ", "physics": false, "shape": "box", "title": "N/A", "value": 8, "x": 0, "y": 100}, {"color": "#90e0ef", "id": 9, "label": "-1        ", "physics": false, "shape": "box", "title": "A G", "value": 9, "x": 100, "y": 100}, {"color": "#90e0ef", "id": 10, "label": "-3        ", "physics": false, "shape": "box", "title": "A G", "value": 10, "x": 200, "y": 100}, {"color": "#90e0ef", "id": 11, "label": "-4        ", "physics": false, "shape": "box", "title": "A G", "value": 11, "x": 300, "y": 100}, {"color": "#90e0ef", "id": 12, "label": "-5        ", "physics": false, "shape": "box", "title": "A T", "value": 12, "x": 400, "y": 100}, {"color": "#90e0ef", "id": 13, "label": "-4        ", "physics": false, "shape": "box", "title": "A A", "value": 13, "x": 500, "y": 100}, {"color": "#90e0ef", "id": 14, "label": "-6        ", "physics": false, "shape": "box", "title": "A G", "value": 14, "x": 600, "y": 100}, {"color": "#90e0ef", "id": 15, "label": "-7        ", "physics": false, "shape": "box", "title": "A C", "value": 15, "x": 700, "y": 100}, {"color": "#ffffff", "id": 16, "label": "-3        ", "physics": false, "shape": "box", "title": "N/A", "value": 16, "x": 0, "y": 200}, {"color": "#90e0ef", "id": 17, "label": "-3        ", "physics": false, "shape": "box", "title": "C G", "value": 17, "x": 100, "y": 200}, {"color": "#90e0ef", "id": 18, "label": "-2        ", "physics": false, "shape": "box", "title": "C G", "value": 18, "x": 200, "y": 200}, {"color": "#90e0ef", "id": 19, "label": "-4        ", "physics": false, "shape": "box", "title": "C G", "value": 19, "x": 300, "y": 200}, {"color": "#90e0ef", "id": 20, "label": "-5        ", "physics": false, "shape": "box", "title": "C T", "value": 20, "x": 400, "y": 200}, {"color": "#90e0ef", "id": 21, "label": "-6        ", "physics": false, "shape": "box", "title": "C A", "value": 21, "x": 500, "y": 200}, {"color": "#90e0ef", "id": 22, "label": "-5        ", "physics": false, "shape": "box", "title": "C G", "value": 22, "x": 600, "y": 200}, {"color": "#90e0ef", "id": 23, "label": "-5        ", "physics": false, "shape": "box", "title": "C C", "value": 23, "x": 700, "y": 200}, {"color": "#ffffff", "id": 24, "label": "-4        ", "physics": false, "shape": "box", "title": "N/A", "value": 24, "x": 0, "y": 300}, {"color": "#90e0ef", "id": 25, "label": "-4        ", "physics": false, "shape": "box", "title": "T G", "value": 25, "x": 100, "y": 300}, {"color": "#90e0ef", "id": 26, "label": "-4        ", "physics": false, "shape": "box", "title": "T G", "value": 26, "x": 200, "y": 300}, {"color": "#90e0ef", "id": 27, "label": "-3        ", "physics": false, "shape": "box", "title": "T G", "value": 27, "x": 300, "y": 300}, {"color": "#90e0ef", "id": 28, "label": "-3        ", "physics": false, "shape": "box", "title": "T T", "value": 28, "x": 400, "y": 300}, {"color": "#90e0ef", "id": 29, "label": "-5        ", "physics": false, "shape": "box", "title": "T A", "value": 29, "x": 500, "y": 300}, {"color": "#90e0ef", "id": 30, "label": "-6        ", "physics": false, "shape": "box", "title": "T G", "value": 30, "x": 600, "y": 300}, {"color": "#90e0ef", "id": 31, "label": "-6        ", "physics": false, "shape": "box", "title": "T C", "value": 31, "x": 700, "y": 300}, {"color": "#ffffff", "id": 32, "label": "-5        ", "physics": false, "shape": "box", "title": "N/A", "value": 32, "x": 0, "y": 400}, {"color": "#90e0ef", "id": 33, "label": "-3        ", "physics": false, "shape": "box", "title": "G G", "value": 33, "x": 100, "y": 400}, {"color": "#90e0ef", "id": 34, "label": "-3        ", "physics": false, "shape": "box", "title": "G G", "value": 34, "x": 200, "y": 400}, {"color": "#90e0ef", "id": 35, "label": "-3        ", "physics": false, "shape": "box", "title": "G G", "value": 35, "x": 300, "y": 400}, {"color": "#90e0ef", "id": 36, "label": "-4        ", "physics": false, "shape": "box", "title": "G T", "value": 36, "x": 400, "y": 400}, {"color": "#90e0ef", "id": 37, "label": "-4        ", "physics": false, "shape": "box", "title": "G A", "value": 37, "x": 500, "y": 400}, {"color": "#90e0ef", "id": 38, "label": "-4        ", "physics": false, "shape": "box", "title": "G G", "value": 38, "x": 600, "y": 400}, {"color": "#90e0ef", "id": 39, "label": "-6        ", "physics": false, "shape": "box", "title": "G C", "value": 39, "x": 700, "y": 400}, {"color": "#ffffff", "id": 40, "label": "-6        ", "physics": false, "shape": "box", "title": "N/A", "value": 40, "x": 0, "y": 500}, {"color": "#90e0ef", "id": 41, "label": "-5        ", "physics": false, "shape": "box", "title": "T G", "value": 41, "x": 100, "y": 500}, {"color": "#90e0ef", "id": 42, "label": "-4        ", "physics": false, "shape": "box", "title": "T G", "value": 42, "x": 200, "y": 500}, {"color": "#90e0ef", "id": 43, "label": "-4        ", "physics": false, "shape": "box", "title": "T G", "value": 43, "x": 300, "y": 500}, {"color": "#90e0ef", "id": 44, "label": "-2        ", "physics": false, "shape": "box", "title": "T T", "value": 44, "x": 400, "y": 500}, {"color": "#90e0ef", "id": 45, "label": "-4        ", "physics": false, "shape": "box", "title": "T A", "value": 45, "x": 500, "y": 500}, {"color": "#90e0ef", "id": 46, "label": "-5        ", "physics": false, "shape": "box", "title": "T G", "value": 46, "x": 600, "y": 500}, {"color": "#90e0ef", "id": 47, "label": "-5        ", "physics": false, "shape": "box", "title": "T C", "value": 47, "x": 700, "y": 500}, {"color": "#ffffff", "id": 48, "label": "-7        ", "physics": false, "shape": "box", "title": "N/A", "value": 48, "x": 0, "y": 600}, {"color": "#90e0ef", "id": 49, "label": "-5        ", "physics": false, "shape": "box", "title": "G G", "value": 49, "x": 100, "y": 600}, {"color": "#90e0ef", "id": 50, "label": "-4        ", "physics": false, "shape": "box", "title": "G G", "value": 50, "x": 200, "y": 600}, {"color": "#90e0ef", "id": 51, "label": "-3        ", "physics": false, "shape": "box", "title": "G G", "value": 51, "x": 300, "y": 600}, {"color": "#90e0ef", "id": 52, "label": "-4        ", "physics": false, "shape": "box", "title": "G T", "value": 52, "x": 400, "y": 600}, {"color": "#90e0ef", "id": 53, "label": "-3        ", "physics": false, "shape": "box", "title": "G A", "value": 53, "x": 500, "y": 600}, {"color": "#90e0ef", "id": 54, "label": "-3        ", "physics": false, "shape": "box", "title": "G G", "value": 54, "x": 600, "y": 600}, {"color": "#90e0ef", "id": 55, "label": "-5        ", "physics": false, "shape": "box", "title": "G C", "value": 55, "x": 700, "y": 600}, {"color": "#ffffff", "id": 56, "label": "-8        ", "physics": false, "shape": "box", "title": "N/A", "value": 56, "x": 0, "y": 700}, {"color": "#90e0ef", "id": 57, "label": "-7        ", "physics": false, "shape": "box", "title": "A G", "value": 57, "x": 100, "y": 700}, {"color": "#90e0ef", "id": 58, "label": "-6        ", "physics": false, "shape": "box", "title": "A G", "value": 58, "x": 200, "y": 700}, {"color": "#90e0ef", "id": 59, "label": "-5        ", "physics": false, "shape": "box", "title": "A G", "value": 59, "x": 300, "y": 700}, {"color": "#90e0ef", "id": 60, "label": "-4        ", "physics": false, "shape": "box", "title": "A T", "value": 60, "x": 400, "y": 700}, {"color": "#90e0ef", "id": 61, "label": "-3        ", "physics": false, "shape": "box", "title": "A A", "value": 61, "x": 500, "y": 700}, {"color": "#90e0ef", "id": 62, "label": "-4        ", "physics": false, "shape": "box", "title": "A G", "value": 62, "x": 600, "y": 700}, {"color": "#90e0ef", "id": 63, "label": "-4        ", "physics": false, "shape": "box", "title": "A C", "value": 63, "x": 700, "y": 700}, {"color": "#ffffff", "id": 64, "label": "A", "physics": false, "shape": "box", "x": -100, "y": 100}, {"color": "#ffffff", "id": 65, "label": "C", "physics": false, "shape": "box", "x": -100, "y": 200}, {"color": "#ffffff", "id": 66, "label": "T", "physics": false, "shape": "box", "x": -100, "y": 300}, {"color": "#ffffff", "id": 67, "label": "G", "physics": false, "shape": "box", "x": -100, "y": 400}, {"color": "#ffffff", "id": 68, "label": "T", "physics": false, "shape": "box", "x": -100, "y": 500}, {"color": "#ffffff", "id": 69, "label": "G", "physics": false, "shape": "box", "x": -100, "y": 600}, {"color": "#ffffff", "id": 70, "label": "A", "physics": false, "shape": "box", "x": -100, "y": 700}, {"color": "#ffffff", "id": 71, "label": "G", "physics": false, "shape": "box", "x": 100, "y": -100}, {"color": "#ffffff", "id": 72, "label": "G", "physics": false, "shape": "box", "x": 200, "y": -100}, {"color": "#ffffff", "id": 73, "label": "G", "physics": false, "shape": "box", "x": 300, "y": -100}, {"color": "#ffffff", "id": 74, "label": "T", "physics": false, "shape": "box", "x": 400, "y": -100}, {"color": "#ffffff", "id": 75, "label": "A", "physics": false, "shape": "box", "x": 500, "y": -100}, {"color": "#ffffff", "id": 76, "label": "G", "physics": false, "shape": "box", "x": 600, "y": -100}, {"color": "#ffffff", "id": 77, "label": "C", "physics": false, "shape": "box", "x": 700, "y": -100}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": "#333333", "from": 1, "physics": false, "to": 0}, {"arrows": "to", "color": "#333333", "from": 2, "physics": false, "to": 1}, {"arrows": "to", "color": "#333333", "from": 3, "physics": false, "to": 2}, {"arrows": "to", "color": "#333333", "from": 4, "physics": false, "to": 3}, {"arrows": "to", "color": "#333333", "from": 5, "physics": false, "to": 4}, {"arrows": "to", "color": "#333333", "from": 6, "physics": false, "to": 5}, {"arrows": "to", "color": "#333333", "from": 7, "physics": false, "to": 6}, {"arrows": "to", "color": "#333333", "from": 8, "physics": false, "to": 0}, {"arrows": "to", "color": "#90e0ef", "from": 9, "physics": false, "to": 0}, {"arrows": "to", "color": "#90e0ef", "from": 10, "physics": false, "to": 1}, {"arrows": "to", "color": "#90e0ef", "from": 10, "physics": false, "to": 2}, {"arrows": "to", "color": "#90e0ef", "from": 11, "physics": false, "to": 2}, {"arrows": "to", "color": "#90e0ef", "from": 11, "physics": false, "to": 3}, {"arrows": "to", "color": "#90e0ef", "from": 12, "physics": false, "to": 3}, {"arrows": "to", "color": "#90e0ef", "from": 12, "physics": false, "to": 4}, {"arrows": "to", "color": "#90e0ef", "from": 13, "physics": false, "to": 4}, {"arrows": "to", "color": "#90e0ef", "from": 14, "physics": false, "to": 6}, {"arrows": "to", "color": "#90e0ef", "from": 15, "physics": false, "to": 7}, {"arrows": "to", "color": "#333333", "from": 16, "physics": false, "to": 8}, {"arrows": "to", "color": "#90e0ef", "from": 17, "physics": false, "to": 16}, {"arrows": "to", "color": "#90e0ef", "from": 17, "physics": false, "to": 8}, {"arrows": "to", "color": "#90e0ef", "from": 18, "physics": false, "to": 9}, {"arrows": "to", "color": "#90e0ef", "from": 19, "physics": false, "to": 10}, {"arrows": "to", "color": "#90e0ef", "from": 19, "physics": false, "to": 11}, {"arrows": "to", "color": "#90e0ef", "from": 20, "physics": false, "to": 11}, {"arrows": "to", "color": "#90e0ef", "from": 20, "physics": false, "to": 12}, {"arrows": "to", "color": "#90e0ef", "from": 21, "physics": false, "to": 20}, {"arrows": "to", "color": "#90e0ef", "from": 21, "physics": false, "to": 12}, {"arrows": "to", "color": "#90e0ef", "from": 21, "physics": false, "to": 13}, {"arrows": "to", "color": "#90e0ef", "from": 22, "physics": false, "to": 13}, {"arrows": "to", "color": "#90e0ef", "from": 23, "physics": false, "to": 14}, {"arrows": "to", "color": "#333333", "from": 24, "physics": false, "to": 16}, {"arrows": "to", "color": "#90e0ef", "from": 25, "physics": false, "to": 24}, {"arrows": "to", "color": "#90e0ef", "from": 25, "physics": false, "to": 16}, {"arrows": "to", "color": "#90e0ef", "from": 26, "physics": false, "to": 25}, {"arrows": "to", "color": "#90e0ef", "from": 26, "physics": false, "to": 17}, {"arrows": "to", "color": "#90e0ef", "from": 27, "physics": false, "to": 18}, {"arrows": "to", "color": "#90e0ef", "from": 28, "physics": false, "to": 19}, {"arrows": "to", "color": "#90e0ef", "from": 29, "physics": false, "to": 21}, {"arrows": "to", "color": "#90e0ef", "from": 30, "physics": false, "to": 22}, {"arrows": "to", "color": "#90e0ef", "from": 31, "physics": false, "to": 22}, {"arrows": "to", "color": "#333333", "from": 32, "physics": false, "to": 24}, {"arrows": "to", "color": "#90e0ef", "from": 33, "physics": false, "to": 24}, {"arrows": "to", "color": "#90e0ef", "from": 34, "physics": false, "to": 25}, {"arrows": "to", "color": "#90e0ef", "from": 35, "physics": false, "to": 26}, {"arrows": "to", "color": "#90e0ef", "from": 36, "physics": false, "to": 27}, {"arrows": "to", "color": "#90e0ef", "from": 37, "physics": false, "to": 28}, {"arrows": "to", "color": "#90e0ef", "from": 38, "physics": false, "to": 29}, {"arrows": "to", "color": "#90e0ef", "from": 39, "physics": false, "to": 31}, {"arrows": "to", "color": "#333333", "from": 40, "physics": false, "to": 32}, {"arrows": "to", "color": "#90e0ef", "from": 41, "physics": false, "to": 40}, {"arrows": "to", "color": "#90e0ef", "from": 42, "physics": false, "to": 33}, {"arrows": "to", "color": "#90e0ef", "from": 43, "physics": false, "to": 34}, {"arrows": "to", "color": "#90e0ef", "from": 44, "physics": false, "to": 35}, {"arrows": "to", "color": "#90e0ef", "from": 45, "physics": false, "to": 37}, {"arrows": "to", "color": "#90e0ef", "from": 46, "physics": false, "to": 37}, {"arrows": "to", "color": "#90e0ef", "from": 46, "physics": false, "to": 38}, {"arrows": "to", "color": "#90e0ef", "from": 47, "physics": false, "to": 38}, {"arrows": "to", "color": "#333333", "from": 48, "physics": false, "to": 40}, {"arrows": "to", "color": "#90e0ef", "from": 49, "physics": false, "to": 40}, {"arrows": "to", "color": "#90e0ef", "from": 50, "physics": false, "to": 41}, {"arrows": "to", "color": "#90e0ef", "from": 51, "physics": false, "to": 42}, {"arrows": "to", "color": "#90e0ef", "from": 52, "physics": false, "to": 51}, {"arrows": "to", "color": "#90e0ef", "from": 53, "physics": false, "to": 44}, {"arrows": "to", "color": "#90e0ef", "from": 54, "physics": false, "to": 45}, {"arrows": "to", "color": "#90e0ef", "from": 55, "physics": false, "to": 47}, {"arrows": "to", "color": "#333333", "from": 56, "physics": false, "to": 48}, {"arrows": "to", "color": "#90e0ef", "from": 57, "physics": false, "to": 56}, {"arrows": "to", "color": "#90e0ef", "from": 58, "physics": false, "to": 57}, {"arrows": "to", "color": "#90e0ef", "from": 58, "physics": false, "to": 49}, {"arrows": "to", "color": "#90e0ef", "from": 59, "physics": false, "to": 58}, {"arrows": "to", "color": "#90e0ef", "from": 59, "physics": false, "to": 50}, {"arrows": "to", "color": "#90e0ef", "from": 60, "physics": false, "to": 51}, {"arrows": "to", "color": "#90e0ef", "from": 61, "physics": false, "to": 52}, {"arrows": "to", "color": "#90e0ef", "from": 62, "physics": false, "to": 53}, {"arrows": "to", "color": "#90e0ef", "from": 63, "physics": false, "to": 54}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": false,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>
