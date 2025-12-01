@@ -17,3 +17,7 @@ cleancython:
 	rm -rf bioloptimizer/build
 	rm -rf bioloptimizer/*.so
 	rm -rf bioloptimizer/cythonlib/biocython.c
+	rm -rf bioloptimizer/__pycache__
+	rm -rf *.html
+	rm -rf output
+	rm -rf *.csv

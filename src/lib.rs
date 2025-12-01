@@ -14,7 +14,7 @@ fn check_import() {
 
 /// Match-Mismatch-Linear Gap alignment
 #[pyfunction]
-fn linear_gap_alignment(seq1: &str, seq2: &str, match_score: i32, mismatch_penalty: i32, gap_penalty: i32, is_local: bool) -> Vec<Vec<(i32, [bool; NUM_DIRECTIONS])>> {
+fn linear_gap_alignment(seq1: &str, seq2: &str, match_score: i32, mismatch_penalty: i32, gap_penalty: i32, is_local: bool) -> (i32, (usize, usize), Vec<Vec<(i32, [bool; NUM_DIRECTIONS])>>) {
     // prepare individual ASCII-character sequences
     let seq1_bytes= seq1.as_bytes();
     let seq2_bytes= seq2.as_bytes();
@@ -24,7 +24,7 @@ fn linear_gap_alignment(seq1: &str, seq2: &str, match_score: i32, mismatch_penal
 
 /// Match-Mismatch-Affine Gap Alignment
 #[pyfunction]
-fn affine_gap_alignment(seq1: &str, seq2: &str, match_score: i32, mismatch_penalty: i32, gap_open_penalty: i32, gap_extend_penalty: i32, is_local: bool) -> Vec<Vec<(i32, [bool; NUM_DIRECTIONS])>> {
+fn affine_gap_alignment(seq1: &str, seq2: &str, match_score: i32, mismatch_penalty: i32, gap_open_penalty: i32, gap_extend_penalty: i32, is_local: bool) -> (i32, (usize, usize), Vec<Vec<(i32, [bool; NUM_DIRECTIONS])>>) {
     // prepare individual ASCII-character sequences
     let seq1_bytes= seq1.as_bytes();
     let seq2_bytes= seq2.as_bytes();
@@ -57,7 +57,9 @@ fn score_comparison(list: &[i32; NUM_DIRECTIONS], is_local: bool) -> (i32, [bool
     // now, determine which directions the alignments will go
     let mut directions = [false; NUM_DIRECTIONS];
 
-    if max == 0 {
+    // if local alignment and score is 0, then just return
+    // a cell telling the program to stop at this cell
+    if max == 0 && is_local {
         return (max, directions)
     }
 
@@ -72,10 +74,16 @@ fn score_comparison(list: &[i32; NUM_DIRECTIONS], is_local: bool) -> (i32, [bool
 /// Build scoring matrix for either global or local alignment
 /// with an affine gap scoring system.
 fn scoring_matrix_affine_gap(seq1: &[u8], seq2: &[u8], max_function: fn(&[i32; NUM_DIRECTIONS], bool) -> (i32, [bool; NUM_DIRECTIONS]),
-match_score: i32, mismatch_penalty: i32, gap_open_penalty: i32, gap_extend_penalty: i32, is_local: bool) -> Vec<Vec<(i32, [bool; NUM_DIRECTIONS])>> {
+match_score: i32, mismatch_penalty: i32, gap_open_penalty: i32, gap_extend_penalty: i32, is_local: bool) -> (i32, (usize, usize), Vec<Vec<(i32, [bool; NUM_DIRECTIONS])>>) {
     // prepare sizes
     let n = seq1.len() + 1;
     let m = seq2.len() + 1;
+
+    // prepare "max" variable in instance where you need to find
+    // max (local alignment)
+    let mut max = 0;
+    let mut i_max = 0;
+    let mut j_max = 0;
 
     // the layouts for each of the "three matrices":
     // one for when a match/mismatch is forced between seq1 and seq2,
@@ -146,40 +154,50 @@ match_score: i32, mismatch_penalty: i32, gap_open_penalty: i32, gap_extend_penal
         for j in 1..m {
             // set the pointer at current position in force match
             unsafe {
-                *seq1_to_seq2_gap_ptr.add(j) = if i == 1 {*score_matrix_ptr.add(j)} else {
-                    if *seq1_to_seq2_gap_ptr.add(j) > *score_matrix_ptr.add(j) {
+                // calculate score for matching current sequence 1 character
+                // to a gap after current sequence 2 character
+                *seq1_to_seq2_gap_ptr.add(j) = if i == 1 {*score_matrix_ptr.add(j) + gap_open_penalty} else {
+                    if *seq1_to_seq2_gap_ptr.add(j) + gap_extend_penalty > *score_matrix_ptr.add(j) + gap_open_penalty {
                         *seq1_to_seq2_gap_ptr.add(j) + gap_extend_penalty
                     } else {
                         *score_matrix_ptr.add(j) + gap_open_penalty
                     }
                 };
 
+                // calculate score for forcing a match or mismatch
                 *force_match_ptr.add(j) = *score_matrix_ptr.add(j - 1) + if seq1[i - 1] == seq2[j - 1] {match_score} else {mismatch_penalty};
 
-                *seq2_to_seq1_gap_ptr.add(j) = if j == 1 {prev_score_matrix} else {
-                    if *seq2_to_seq1_gap_ptr.add(j - 1) > prev_score_matrix {
+                // calculate score for matching current sequence 2 character
+                // to a gap after current sequence 1 character
+                *seq2_to_seq1_gap_ptr.add(j) = if j == 1 {prev_score_matrix + gap_open_penalty} else {
+                    if *seq2_to_seq1_gap_ptr.add(j - 1) + gap_extend_penalty > prev_score_matrix + gap_open_penalty {
                         *seq2_to_seq1_gap_ptr.add(j - 1) + gap_extend_penalty
                     } else {
                         prev_score_matrix + gap_open_penalty
                     }
                 };
 
+                // store scores for comparison
                 scores[0] = *seq1_to_seq2_gap_ptr.add(j);
                 scores[1] = *force_match_ptr.add(j);
                 scores[2] = *seq2_to_seq1_gap_ptr.add(j);
             }
 
-
             // get max score and directions
             let output_tup = max_function(&scores, is_local);
             curr = output_tup.0;
 
+            if curr > max {
+                max = curr;
+                i_max = i;
+                j_max = j;
+            }
+
             // push current score and directions to the current row
             vec_to_add.push(output_tup);
-
+            
             // write down the "prev" score
             unsafe {
-                *score_matrix_ptr.add(j) = curr;
                 *score_matrix_ptr.add(j - 1) = prev_score_matrix;
             }
 
@@ -204,17 +222,26 @@ match_score: i32, mismatch_penalty: i32, gap_open_penalty: i32, gap_extend_penal
         dealloc(seq2_to_seq1_gap_ptr as *mut u8, seq2_to_seq1_gap_layout);
     }
 
-    vectors
+    if is_local {
+        return (max, (i_max, j_max), vectors);
+    }
+
+    (vectors[n - 1][m - 1].0, (n - 1, m - 1), vectors)
 }
 
 
 /// Build scoring matrix for either global or local alignment
 /// with a linear gap scoring system.
 fn scoring_matrix_linear_gap(seq1: &[u8], seq2: &[u8], max_function: fn(&[i32; NUM_DIRECTIONS], bool) -> (i32, [bool; NUM_DIRECTIONS]),
-match_score: i32, mismatch_penalty: i32, gap_penalty: i32, is_local: bool) -> Vec<Vec<(i32, [bool; NUM_DIRECTIONS])>> {
+match_score: i32, mismatch_penalty: i32, gap_penalty: i32, is_local: bool) -> (i32, (usize, usize), Vec<Vec<(i32, [bool; NUM_DIRECTIONS])>>) {
     // prepare sizes
     let n = seq1.len() + 1;
     let m = seq2.len() + 1;
+
+    // prepare max, i_max, j_max
+    let mut max = 0;
+    let mut i_max = 0;
+    let mut j_max = 0;
 
     // prev and curr layouts and arrays
     let prev_layout = Layout::array::<i32>(m).unwrap();
@@ -303,6 +330,13 @@ match_score: i32, mismatch_penalty: i32, gap_penalty: i32, is_local: bool) -> Ve
             // set new "prev" score
             prev = curr;
 
+            // set max
+            if curr > max {
+                max = curr;
+                i_max = i;
+                j_max = j;
+            }
+
             // update the "left" score to the current score
             scores[0] = curr + gap_penalty;
         }
@@ -321,8 +355,112 @@ match_score: i32, mismatch_penalty: i32, gap_penalty: i32, is_local: bool) -> Ve
         dealloc(prev_ptr as *mut u8, prev_layout);
     }
 
-    vectors
+
+    if is_local {
+        return (max, (i_max, j_max), vectors);
+    }
+
+    (vectors[n - 1][m - 1].0, (n - 1, m - 1), vectors)
 }
+
+
+/// Reconstruct a global or local alignment, given
+/// the full scoring matrix.
+#[pyfunction]
+fn reconstruct_alignment(seq1: &str, seq2: &str, matrix: Vec<Vec<(i32, [bool; NUM_DIRECTIONS])>>, starting_pos: (usize, usize), is_local: bool) -> Vec<[String; 2]> {
+    // get starting position
+    let (mut i, mut j) = starting_pos;
+
+    let seq1 = seq1.as_bytes();
+    let seq2 = seq2.as_bytes();
+
+    // create vector of alignments
+    let mut alignments = vec![[String::new(), String::new()]];
+
+    // local alignment
+    if is_local {
+        // construct alignment until a "0" is found
+        loop {
+            let (score, directions) = matrix[i][j];
+            if score != 0 {
+                // count the number of possible paths
+                let mut count = 0;
+
+                // prefer the score that says to go "align"
+                let go_left = directions[0];
+                let go_diag = directions[1];
+                let go_up = directions[2];
+
+                // go left
+                if go_left {
+                    alignments[0][0].push('-');
+                    alignments[0][1].push(seq2[j - 1] as char);
+                    j -= 1;
+                    continue;
+                }
+
+                if go_diag {
+                    alignments[0][0].push(seq1[i - 1] as char);
+                    alignments[0][1].push(seq2[j - 1] as char);
+                    i -= 1;
+                    j -= 1;
+                    continue;
+                }
+
+                if go_up {
+                    alignments[0][0].push(seq1[i - 1] as char);
+                    alignments[0][1].push('-');
+                    i -= 1;
+                    continue;
+                }
+            } else {
+                break;
+            }
+        }
+    } else {
+        // construct alignment until a "0" is found
+        while i > 0 || j > 0 {
+            let (score, directions) = matrix[i][j];
+            
+            // count the number of possible paths
+            let mut count = 0;
+
+            // prefer the score that says to go "align"
+            let go_left = directions[0];
+            let go_diag = directions[1];
+            let go_up = directions[2];
+
+            // go left
+            if go_left {
+                alignments[0][0].push('-');
+                alignments[0][1].push(seq2[j - 1] as char);
+                j -= 1;
+                continue;
+            }
+
+            if go_diag {
+                alignments[0][0].push(seq1[i - 1] as char);
+                alignments[0][1].push(seq2[j - 1] as char);
+                i -= 1;
+                j -= 1;
+                continue;
+            }
+
+            if go_up {
+                alignments[0][0].push(seq1[i - 1] as char);
+                alignments[0][1].push('-');
+                i -= 1;
+                continue;
+            }
+        }
+    }
+
+    alignments[0][0] = alignments[0][0].chars().rev().collect();
+    alignments[0][1] = alignments[0][1].chars().rev().collect();
+
+    alignments
+}
+
 
 /// A Python module implemented in Rust.
 #[pymodule]
@@ -330,5 +468,6 @@ fn biorust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(check_import, m)?)?;
     m.add_function(wrap_pyfunction!(linear_gap_alignment, m)?)?;
     m.add_function(wrap_pyfunction!(affine_gap_alignment, m)?)?;
+    m.add_function(wrap_pyfunction!(reconstruct_alignment, m)?)?;
     Ok(())
 }

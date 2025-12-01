@@ -12,6 +12,6 @@ Install the pip packages in the requirements.txt file.
 
 ## Running Instructions
 
-Use ```make clean``` to clean build files, and ```make``` to build the necessary packages.
+Use ```make clean``` to clean build files, and ```make rust``` to build the necessary packages.
 
-Use ```python3 -B -m bioloptimizer``` as a way to run the __main__.py file.
+Use ```python3 -B -m bioloptimizer --help``` as a way to run the CLI interface's help message.
